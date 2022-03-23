@@ -18,7 +18,7 @@ def generateCards(card_type=['ranks', 'royals', 'jokers'], suit_type=['S', 'H', 
         if 'royals' in card_type:
             for royal in royals:
                 cards.append(Card(royal, suit))
-        if 'jokers' in card_type':
+        if 'jokers' in card_type:
             for joker in jokers:
                 cards.append(Card(joker, None))
 
@@ -64,9 +64,10 @@ class Player:
 
 class Node:
 
-    def __init__(self, position=None, treasure=False):
+    def __init__(self, position=None, treasure=False, type=None):
         self.position = position
         self.treasure = treasure
+        self.type = type
 
     def generatetreasure(self):
         self.treasure = True
@@ -74,6 +75,8 @@ class Node:
     def removetreasure(self):
         self.treasure = False
 
+    def pivot(self, card_a, card_b):
+        pass
 
 
 class Deck:
@@ -109,13 +112,13 @@ class Table:
             'south' : House(suit='C'),
             'west'  : House(suit='D')
         }
-        self.pivots = {}
-        for position in ['north', 'east', 'south', 'west']:
-            for title in ['royals', 'subjects', 'opponents']:
-                if title == 'opponents':
-                    for lane in ['left', 'middle', 'right']:
-                        self.pivots
-                else:
+        # self.pivots = {}
+        # for position in ['north', 'east', 'south', 'west']:
+        #     for title in ['royals', 'subjects', 'opponents']:
+        #         if title == 'opponents':
+        #             for lane in ['left', 'middle', 'right']:
+        #                 self.pivots
+        #         else:
                     
 
 
@@ -133,17 +136,17 @@ class Table:
 
 
 
-class Pivot:
+# class Pivot:
 
-    def __init__(self, card_a, card_b):
-        self.card_a = card_a
-        self.card_b = card_b
+#     def __init__(self, card_a, card_b):
+#         self.card_a = card_a
+#         self.card_b = card_b
 
-    def pivot(self):
-        card_a = self.card_a
-        card_b = self.card_b
-        self.card_a = card_b
-        self.card_b = card_a
+#     def pivot(self):
+#         card_a = self.card_a
+#         card_b = self.card_b
+#         self.card_a = card_b
+#         self.card_b = card_a
 
 
 
