@@ -1,18 +1,19 @@
 
 
 
-import random
+import random, ui
 
 
 
-def generateCards(card_type=['ranks', 'royals', 'jokers'], suit_type=['S', 'H', 'C', 'D']):
-    ranks  = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+def generateCards(card_type=['subjects', 'royals', 'jokers'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']):
+
+    ranks  = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'X']
     royals = ['J', 'Q', 'K']
     jokers = ['$']
     
     cards = []
     for suit in suit_type:
-        if 'ranks' in card_type:
+        if 'subjects' in card_type:
             for rank in ranks:
                 cards.append(Card(rank, suit))
         if 'royals' in card_type:
@@ -25,6 +26,13 @@ def generateCards(card_type=['ranks', 'royals', 'jokers'], suit_type=['S', 'H', 
     return cards
 
 ########################################################################################
+
+
+
+
+
+
+
 
 class Card:
 
@@ -44,7 +52,10 @@ class Card:
         self.visible = True
     
     def getFace(self):
-        return (self.value, self.suit)
+        if self.visible:
+            return ''.join((self.getValue(), self.getSuitChar()))
+        else:
+            return '??'
 
     def getValue(self):
         return self.value
@@ -52,37 +63,60 @@ class Card:
     def getSuit(self):
         return self.suit
 
+    def getSuitChar(self):
+        return self.suit[0].upper()
+
+
+
+
+
+
+
 
 
 class Player:
 
-    def __init__(self, name=None, house=None):
+    def __init__(self, name=None, house=None, score=0):
         self.name = name
         self.house = house
+        self.score = score
 
 
 
-class Node:
 
-    def __init__(self, position=None, treasure=False, type=None):
-        self.position = position
-        self.treasure = treasure
-        self.type = type
 
-    def generatetreasure(self):
-        self.treasure = True
 
-    def removetreasure(self):
-        self.treasure = False
 
-    def pivot(self, card_a, card_b):
-        pass
+class CardNode:
+    def __init__(self, card_type=None, card=None):
+        self.card = card
+        self.card_type = card_type
+    
+    def setCard(self, card=None):
+        self.card = card
+
+    def getCard(self):
+        return self.card
+
+    def getFace(self):
+        if self.card is None:
+            return '[]'
+        else:
+            return self.card.getFace()
+
+
+
+
+
+
 
 
 class Deck:
 
-    def __init__(self, cards=[]):
+    def __init__(self, cards=[], hidden=True):
         self.cards = cards
+        if hidden:
+            self.hide()
     
     def draw(self, index=0, count=1):
         cards = []
@@ -104,35 +138,40 @@ class Deck:
 
 class Table:
 
-    def __init__(self, deck=Deck()):
-        self.deck = deck        
+    def __init__(self):
+        self.deck = Deck(generateCards(card_type=['subjects'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']), hidden=False)
+        self.deck.shuffle()
         self.houses = {
-            'north' : House(suit='S'),
-            'east'  : House(suit='H'),
-            'south' : House(suit='C'),
-            'west'  : House(suit='D')
+            'north' : House(suit='spades'),
+            'east'  : House(suit='hearts'),
+            'south' : House(suit='clubs'),
+            'west'  : House(suit='diamonds')
         }
-        # self.pivots = {}
-        # for position in ['north', 'east', 'south', 'west']:
-        #     for title in ['royals', 'subjects', 'opponents']:
-        #         if title == 'opponents':
-        #             for lane in ['left', 'middle', 'right']:
-        #                 self.pivots
-        #         else:
-                    
+
+        self.setUpCardNodes()
+        self.dealRoyals()
+        self.dealSubjects()
 
 
-        self.nodes = {
-            'northeast' : Node(position='northeast'),
-            'southeast' : Node(position='southeast'),
-            'southwest' : Node(position='southwest'),
-            'northwest' : Node(position='northwest'),
-            'center'    : Node(position='center'),
-            'north'     : Node(position='north'),
-            'east'      : Node(position='east'),
-            'south'     : Node(position='south'),
-            'west'      : Node(position='west')
-        }
+    def setUpCardNodes(self):
+        self.card_nodes = {}
+        for card_type in ['royals', 'subjects']:
+            self.card_nodes[card_type] = {}
+            for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
+                self.card_nodes[card_type][suit] = {}
+                for position in ['left', 'center', 'right']:
+                    self.card_nodes[card_type][suit][position] = CardNode(card_type=card_type)
+    
+    def dealRoyals(self):
+        for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
+            cards = generateCards(card_type=['royals'], suit_type=[suit])
+            for position in ['left', 'center', 'right']:
+                self.card_nodes['royals'][suit][position].setCard(cards.pop(0))
+
+    def dealSubjects(self):
+        for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
+            for position in ['left', 'center', 'right']:
+                self.card_nodes['subjects'][suit][position].setCard(self.deck.draw()[0])
 
 
 
@@ -159,12 +198,12 @@ class House:
         self.court = {
             'royals': {
                 'left'  : None,
-                'middle': None,
+                'center': None,
                 'right' : None
             },
             'subjects': {
                 'left'  : None,
-                'middle': None,
+                'center': None,
                 'right' : None
             }
         }
@@ -179,7 +218,7 @@ class Rules:
     # def __init__(self):
     #     pass
 
-    def __init__(self, turn_order=['S', 'H', 'C', 'D']):
+    def __init__(self, turn_order=['spades', 'hearts', 'clubs', 'diamonds']):
         self.turn_order = turn_order
 
     # def getNextTurnSuit(self, turn_number):
@@ -194,7 +233,7 @@ class Rules:
         if (player_card.getValue(), opponent_card.getValue()) in roy_trumps:
             return True
 
-        suit_trumps = [('S', 'H'), ('H', 'C'), ('C', 'D'), ('D', 'S')]
+        suit_trumps = [('spades', 'hearts'), ('hearts', 'clubs'), ('clubs', 'diamonds'), ('diamonds', 'spades')]
         if (player_card.getSuit(), opponent_card.getSuit()) in suit_trumps:
             if (opponent_card.getValue(), player_card.getValue()) in roy_trumps:
                 return False
@@ -237,6 +276,7 @@ class Game:
 
     def __init__(self):
         self.turn_number = 0
+        self.table = Table()
 
     def nextState():
         pass
@@ -250,6 +290,10 @@ class Game:
 if __name__ == '__main__':
 
     game = Game()
+    # game loop here
+
+    print(game.table.card_nodes['royals']['spades']['left'].getFace())
+
 
 
     '''
@@ -260,7 +304,7 @@ if __name__ == '__main__':
             if (card_a != card_b) and (card_a.getSuit() != card_b.getSuit()):
                 print("{} -> {} ? {}".format(card_a.getFace(), card_b.getFace(), rules.doesCardTrump(card_a, card_b)))
 
-    cards = generateCards(card_type='ranks')
+    cards = generateCards(card_type='subjects')
     print("deck stuff")
     print("deck before", [card.getFace() for card in cards])
     deck = Deck(cards=cards)
