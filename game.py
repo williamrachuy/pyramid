@@ -1,6 +1,4 @@
 
-
-
 import random, ui
 
 from matplotlib.pyplot import table
@@ -30,11 +28,6 @@ def generateCards(card_type=['subjects', 'royals', 'jokers'], suit_type=['spades
     return cards
 
 ########################################################################################
-
-
-
-
-
 
 
 
@@ -72,22 +65,12 @@ class Card:
 
 
 
-
-
-
-
-
-
 class Player:
 
     def __init__(self, name=None, house=None, score=0):
         self.name = name
         self.house = house
         self.score = score
-
-
-
-
 
 
 
@@ -241,14 +224,12 @@ class Table:
                 position_next = POSITIONS[(POSITIONS.index(position)+1) % len(POSITIONS)]
                 dict_key_name = '{}-{}'.format(position, position_next)
                 self.pivot_nodes['court'][suit][dict_key_name] = PivotNode(card_node_left=subjects[position], card_node_right=subjects[position_next])
-                # print('position', suit, dict_key_name, "setup")
             self.pivot_nodes['royals'][suit] = {}
             royals = self.card_nodes['royals'][suit]
             for position in POSITIONS:
                 position_next = POSITIONS[(POSITIONS.index(position)+1) % len(POSITIONS)]
                 dict_key_name = '{}-{}'.format(position, position_next)
                 self.pivot_nodes['royals'][suit][dict_key_name] = PivotNode(card_node_left=royals[position], card_node_right=royals[position_next])
-                # print('royal', suit, dict_key_name, "setup")
         for suit in SUITS[0:2]:
             suit_next = SUITS[(SUITS.index(suit)+2) % len(SUITS)]
             dict_key_name = '{}-{}'.format(suit, suit_next)
@@ -270,39 +251,12 @@ class Table:
                 self.card_nodes['subjects'][suit][position].setCard(self.deck.draw()[0])
 
 
-
-# class Pivot:
-
-#     def __init__(self, card_a, card_b):
-#         self.card_a = card_a
-#         self.card_b = card_b
-
-#     def pivot(self):
-#         card_a = self.card_a
-#         card_b = self.card_b
-#         self.card_a = card_b
-#         self.card_b = card_a
-
-
-
 class House:
 
     def __init__(self, suit=None, position=None, hand=[], treasury=0):
         self.suit     = suit
         self.hand     = hand
         self.treasury = treasury
-        # self.court = {
-        #     'royals': {
-        #         'left'  : None,
-        #         'center': None,
-        #         'right' : None
-        #     },
-        #     'subjects': {
-        #         'left'  : None,
-        #         'center': None,
-        #         'right' : None
-        #     }
-        # }
         
 
 
@@ -311,6 +265,7 @@ class House:
 
 
 class Rules:
+    
     # def __init__(self):
     #     pass
 
@@ -341,15 +296,6 @@ class Rules:
         if (cards[0].getValue() == cards[1].getValue()) or ('A' in (cards[0].getValue(), cards[1].getValue())):
             return True
         return False
-
-    # def isFour(self, card_a, card_b, card_c, card_d):
-    #     if (
-    #             card_a.getValue() == card_b.getValue() and
-    #             card_b.getValue() == card_c.getValue() and
-    #             card_c.getValue() == card_d.getValue()
-    #     ):
-    #         return True
-    #     return False
 
     def isFlush(self, suit, cards):
         for card in cards:
@@ -412,25 +358,6 @@ if __name__ == '__main__':
     # game loop here
 
     print(game.table.card_nodes['royals']['spades']['left'].getFace())
-
-
-
-    '''
-    rules = Rules()
-    cards = generateCards(card_type='royals')
-    for card_a in cards:
-        for card_b in cards:
-            if (card_a != card_b) and (card_a.getSuit() != card_b.getSuit()):
-                print("{} -> {} ? {}".format(card_a.getFace(), card_b.getFace(), rules.doesCardTrump(card_a, card_b)))
-
-    cards = generateCards(card_type='subjects')
-    print("deck stuff")
-    print("deck before", [card.getFace() for card in cards])
-    deck = Deck(cards=cards)
-    hand = deck.draw(index=4, count=3)
-    print("deck after", [card.getFace() for card in cards])
-    print("hand", [card.getFace() for card in hand])
-    '''
 
     quit()
 
