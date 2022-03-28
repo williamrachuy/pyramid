@@ -6,6 +6,8 @@ import random, ui
 from matplotlib.pyplot import table
 
 SUITS = ('spades', 'hearts', 'clubs', 'diamonds')
+POSITIONS = ('left', 'right', 'center')
+LOCATIONS = ('base', 'cap', 'court', 'peak')
 
 def generateCards(card_type=['subjects', 'royals', 'jokers'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']):
 
@@ -128,6 +130,19 @@ class GemNode:
 
 
 
+class PivotNode:
+    def __init__(self, card_node_left=None, card_node_right=None):
+        self.card_node_left = card_node_left
+        self.card_node_right = card_node_right
+
+    def pivot(self):
+        temp_card_left = self.card_node_left.getCard()
+        temp_card_right = self.card_node_right.getCard()
+        self.card_node_left.setCard(card=temp_card_right)
+        self.card_node_right.setCard(card=temp_card_left)
+
+
+
 class Deck:
 
     def __init__(self, cards=[], hidden=True):
@@ -173,6 +188,8 @@ class Table:
         self.gem_nodes = {}
         self.setUpGemNodes()
         
+        self.pivot_nodes = {}
+        self.setUpPivotNodes()
 
 
     def setUpCardNodes(self):
@@ -180,13 +197,12 @@ class Table:
             self.card_nodes[card_type] = {}
             for suit in SUITS:
                 self.card_nodes[card_type][suit] = {}
-                for position in ('left', 'center', 'right'):
+                for position in POSITIONS:
                     self.card_nodes[card_type][suit][position] = CardNode(card_type=card_type)
 
     def setUpGemNodes(self):
-        for location in ('base', 'cap', 'court', 'peak'):
+        for location in LOCATIONS:
             self.gem_nodes[location] = {}
-
         for suit in SUITS:
             suit_next = SUITS[(SUITS.index(suit)+1) % len(SUITS)]
             dict_key_name = '{}-{}'.format(suit, suit_next)
@@ -206,16 +222,51 @@ class Table:
             # peak
             self.gem_nodes['peak'][dict_key_name] = GemNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
 
+    def setUpPivotNodes(self):
+        for location in LOCATIONS:
+            self.pivot_nodes[location] = {}
+        self.pivot_nodes['royals'] = {}
+        for suit in SUITS:
+            suit_next = SUITS[(SUITS.index(suit)+1) % len(SUITS)]
+            dict_key_name = '{}-{}'.format(suit, suit_next)
+            subjects = self.card_nodes['subjects'][suit]
+            subjects_next = self.card_nodes['subjects'][suit_next]
+            # base
+            self.pivot_nodes['base'][dict_key_name] = PivotNode(card_node_left=subjects['right'], card_node_right=subjects_next['left'])
+            # cap
+            self.pivot_nodes['cap'][dict_key_name] = PivotNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
+            # court
+            self.pivot_nodes['court'][suit] = {}
+            for position in POSITIONS:
+                position_next = POSITIONS[(POSITIONS.index(position)+1) % len(POSITIONS)]
+                dict_key_name = '{}-{}'.format(position, position_next)
+                self.pivot_nodes['court'][suit][dict_key_name] = PivotNode(card_node_left=subjects[position], card_node_right=subjects[position_next])
+                # print('position', suit, dict_key_name, "setup")
+            self.pivot_nodes['royals'][suit] = {}
+            royals = self.card_nodes['royals'][suit]
+            for position in POSITIONS:
+                position_next = POSITIONS[(POSITIONS.index(position)+1) % len(POSITIONS)]
+                dict_key_name = '{}-{}'.format(position, position_next)
+                self.pivot_nodes['royals'][suit][dict_key_name] = PivotNode(card_node_left=royals[position], card_node_right=royals[position_next])
+                # print('royal', suit, dict_key_name, "setup")
+        for suit in SUITS[0:2]:
+            suit_next = SUITS[(SUITS.index(suit)+2) % len(SUITS)]
+            dict_key_name = '{}-{}'.format(suit, suit_next)
+            subjects = self.card_nodes['subjects'][suit]
+            subjects_next = self.card_nodes['subjects'][suit_next]
+            # peak
+            self.pivot_nodes['peak'][dict_key_name] = PivotNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
+
     
     def dealRoyals(self):
         for suit in SUITS:
             cards = generateCards(card_type=['royals'], suit_type=[suit])
-            for position in ('left', 'center', 'right'):
+            for position in POSITIONS:
                 self.card_nodes['royals'][suit][position].setCard(cards.pop(0))
 
     def dealSubjects(self):
         for suit in SUITS:
-            for position in ('left', 'center', 'right'):
+            for position in POSITIONS:
                 self.card_nodes['subjects'][suit][position].setCard(self.deck.draw()[0])
 
 
@@ -327,17 +378,17 @@ class Game:
         for suit_pair, gem_node in self.table.gem_nodes['base'].items():
             if self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard())):
                 gem_node.setGem()
-                print("gem set for base", suit_pair)
+                # print("gem set for base", suit_pair)
         # cap
         for suit_pair, gem_node in self.table.gem_nodes['cap'].items():
             if self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard())):
                 gem_node.setGem()
-                print("gem set for cap", suit_pair)
+                # print("gem set for cap", suit_pair)
         # court
         for suit, gem_node in self.table.gem_nodes['court'].items():
             if self.rules.isFlush(suit=suit, cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard(), gem_node.card_node_center.getCard())):
                 gem_node.setGem()
-                print("gem set for cour", suit)
+                # print("gem set for cour", suit)
         # peak
         empty = True
         for suit_pair, gem_node in self.table.gem_nodes['peak'].items():
@@ -346,7 +397,7 @@ class Game:
         for suit_pair, gem_node in self.table.gem_nodes['peak'].items():
             if (empty == True) and (self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard()))):
                 gem_node.setGem()
-                print("gem set for peak", suit_pair)
+                # print("gem set for peak", suit_pair)
                 empty = False
 
 
