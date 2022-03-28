@@ -3,7 +3,9 @@
 
 import random, ui
 
+from matplotlib.pyplot import table
 
+SUITS = ('spades', 'hearts', 'clubs', 'diamonds')
 
 def generateCards(card_type=['subjects', 'royals', 'jokers'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']):
 
@@ -106,8 +108,23 @@ class CardNode:
 
 
 
+class GemNode:
+    def __init__(self, card_node_left=None, card_node_right=None, card_node_center=None):
+        self.gem = False
+        self.card_node_left = card_node_left
+        self.card_node_right = card_node_right
+        self.card_node_center = card_node_center
 
+    def setGem(self):
+        self.gem = True
 
+    def removeGem(self):
+        self.gem = False
+
+    def hasGem(self):
+        if self.gem == True:
+            return True
+        return False
 
 
 
@@ -139,7 +156,7 @@ class Deck:
 class Table:
 
     def __init__(self):
-        self.deck = Deck(generateCards(card_type=['subjects'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']), hidden=False)
+        self.deck = Deck(generateCards(card_type=['subjects'], suit_type=SUITS), hidden=False)
         self.deck.shuffle()
         self.houses = {
             'north' : House(suit='spades'),
@@ -148,29 +165,57 @@ class Table:
             'west'  : House(suit='diamonds')
         }
 
+        self.card_nodes = {}
         self.setUpCardNodes()
         self.dealRoyals()
         self.dealSubjects()
 
+        self.gem_nodes = {}
+        self.setUpGemNodes()
+        
+
 
     def setUpCardNodes(self):
-        self.card_nodes = {}
-        for card_type in ['royals', 'subjects']:
+        for card_type in ('royals', 'subjects'):
             self.card_nodes[card_type] = {}
-            for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
+            for suit in SUITS:
                 self.card_nodes[card_type][suit] = {}
-                for position in ['left', 'center', 'right']:
+                for position in ('left', 'center', 'right'):
                     self.card_nodes[card_type][suit][position] = CardNode(card_type=card_type)
+
+    def setUpGemNodes(self):
+        for location in ('base', 'cap', 'court', 'peak'):
+            self.gem_nodes[location] = {}
+
+        for suit in SUITS:
+            suit_next = SUITS[(SUITS.index(suit)+1) % len(SUITS)]
+            dict_key_name = '{}-{}'.format(suit, suit_next)
+            subjects = self.card_nodes['subjects'][suit]
+            subjects_next = self.card_nodes['subjects'][suit_next]
+            # base
+            self.gem_nodes['base'][dict_key_name] = GemNode(card_node_left=subjects['right'], card_node_right=subjects_next['left'])
+            # cap
+            self.gem_nodes['cap'][dict_key_name] = GemNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
+            # court
+            self.gem_nodes['court'][suit] = GemNode(card_node_left=subjects['left'], card_node_right=subjects['right'], card_node_center=subjects['center'])
+        for suit in SUITS[0:2]:
+            suit_next = SUITS[(SUITS.index(suit)+2) % len(SUITS)]
+            dict_key_name = '{}-{}'.format(suit, suit_next)
+            subjects = self.card_nodes['subjects'][suit]
+            subjects_next = self.card_nodes['subjects'][suit_next]
+            # peak
+            self.gem_nodes['peak'][dict_key_name] = GemNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
+
     
     def dealRoyals(self):
-        for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
+        for suit in SUITS:
             cards = generateCards(card_type=['royals'], suit_type=[suit])
-            for position in ['left', 'center', 'right']:
+            for position in ('left', 'center', 'right'):
                 self.card_nodes['royals'][suit][position].setCard(cards.pop(0))
 
     def dealSubjects(self):
-        for suit in ['spades', 'hearts', 'clubs', 'diamonds']:
-            for position in ['left', 'center', 'right']:
+        for suit in SUITS:
+            for position in ('left', 'center', 'right'):
                 self.card_nodes['subjects'][suit][position].setCard(self.deck.draw()[0])
 
 
@@ -195,18 +240,18 @@ class House:
         self.suit     = suit
         self.hand     = hand
         self.treasury = treasury
-        self.court = {
-            'royals': {
-                'left'  : None,
-                'center': None,
-                'right' : None
-            },
-            'subjects': {
-                'left'  : None,
-                'center': None,
-                'right' : None
-            }
-        }
+        # self.court = {
+        #     'royals': {
+        #         'left'  : None,
+        #         'center': None,
+        #         'right' : None
+        #     },
+        #     'subjects': {
+        #         'left'  : None,
+        #         'center': None,
+        #         'right' : None
+        #     }
+        # }
         
 
 
@@ -218,7 +263,7 @@ class Rules:
     # def __init__(self):
     #     pass
 
-    def __init__(self, turn_order=['spades', 'hearts', 'clubs', 'diamonds']):
+    def __init__(self, turn_order=SUITS):
         self.turn_order = turn_order
 
     # def getNextTurnSuit(self, turn_number):
@@ -241,30 +286,25 @@ class Rules:
         
         return False
 
-    def isPair(self, card_a, card_b):
-        if card_a.getValue() == card_b.getValue():
+    def isPair(self, cards):
+        if (cards[0].getValue() == cards[1].getValue()) or ('A' in (cards[0].getValue(), cards[1].getValue())):
             return True
         return False
 
-    def isFour(self, card_a, card_b, card_c, card_d):
-        if (
-                card_a.getValue() == card_b.getValue() and
-                card_b.getValue() == card_c.getValue() and
-                card_c.getValue() == card_d.getValue()
-        ):
-            return True
-        return False
+    # def isFour(self, card_a, card_b, card_c, card_d):
+    #     if (
+    #             card_a.getValue() == card_b.getValue() and
+    #             card_b.getValue() == card_c.getValue() and
+    #             card_c.getValue() == card_d.getValue()
+    #     ):
+    #         return True
+    #     return False
 
-    def isFlush(self, court):
-        if (
-                court.roy_l.getSuit() == court.roy_m.getSuit() and
-                court.roy_m.getSuit() == court.roy_r.getSuit() and
-                court.roy_r.getSuit() == court.num_l.getSuit() and
-                court.num_l.getSuit() == court.num_m.getSuit() and
-                court.num_m.getSuit() == court.num_r.getSuit()
-        ):
-            return True
-        return False
+    def isFlush(self, suit, cards):
+        for card in cards:
+            if card.getSuit() != suit:
+                return False
+        return True
 
 
 
@@ -277,9 +317,37 @@ class Game:
     def __init__(self):
         self.turn_number = 0
         self.table = Table()
+        self.rules = Rules()
 
-    def nextState():
+    def nextState(self):
         pass
+
+    def generateGems(self):
+        # base
+        for suit_pair, gem_node in self.table.gem_nodes['base'].items():
+            if self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard())):
+                gem_node.setGem()
+                print("gem set for base", suit_pair)
+        # cap
+        for suit_pair, gem_node in self.table.gem_nodes['cap'].items():
+            if self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard())):
+                gem_node.setGem()
+                print("gem set for cap", suit_pair)
+        # court
+        for suit, gem_node in self.table.gem_nodes['court'].items():
+            if self.rules.isFlush(suit=suit, cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard(), gem_node.card_node_center.getCard())):
+                gem_node.setGem()
+                print("gem set for cour", suit)
+        # peak
+        empty = True
+        for suit_pair, gem_node in self.table.gem_nodes['peak'].items():
+            if gem_node.hasGem():
+                empty = False
+        for suit_pair, gem_node in self.table.gem_nodes['peak'].items():
+            if (empty == True) and (self.rules.isPair(cards=(gem_node.card_node_left.getCard(), gem_node.card_node_right.getCard()))):
+                gem_node.setGem()
+                print("gem set for peak", suit_pair)
+                empty = False
 
 
 
