@@ -2,6 +2,7 @@ import os, time
 from game import Game, POSITIONS
 from ui import UI
 
+# test
 
 if __name__ == '__main__':
     clear = lambda: os.system('cls')
