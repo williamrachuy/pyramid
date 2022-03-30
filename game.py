@@ -67,10 +67,37 @@ class Card:
 
 class Player:
 
-    def __init__(self, name=None, house=None, score=0):
+    '''
+    a player may:
+    1. claim a gem (no actions)
+    2. pivot cards
+    3. draw a card
+    4. pay a gem (to acquire actions)
+    5. pass the turn (no actions)
+    '''
+
+    def __init__(self, name=None, house=None, score=0, actions=0):
         self.name = name
         self.house = house
         self.score = score
+        self.actions = actions
+
+    def claimGem(self, gem_node):
+        pass
+
+    def payGem(self):
+        pass
+
+    def pivot(self):
+        pass
+
+    def draw(self):
+        pass
+
+    def endTurn(self):
+        pass
+
+
 
 
 
@@ -127,7 +154,6 @@ class PivotNode:
 
 
 class Deck:
-
     def __init__(self, cards=[], hidden=True):
         self.cards = cards
         if hidden:
@@ -152,7 +178,6 @@ class Deck:
 
 
 class Table:
-
     def __init__(self):
         self.deck = Deck(generateCards(card_type=['subjects'], suit_type=SUITS), hidden=False)
         self.deck.shuffle()
@@ -252,11 +277,10 @@ class Table:
 
 
 class House:
-
-    def __init__(self, suit=None, position=None, hand=[], treasury=0):
-        self.suit     = suit
-        self.hand     = hand
-        self.treasury = treasury
+    def __init__(self, suit=None, hand=[], gems=0):
+        self.suit = suit
+        self.hand = hand
+        self.gems = gems
         
 
 
@@ -310,11 +334,14 @@ class Rules:
 
 
 class Game:
-
     def __init__(self):
         self.turn_number = 0
         self.table = Table()
         self.rules = Rules()
+        self.players = {}
+        for i in range(4):
+            name = 'player{}'.format(i+1)
+            self.players[name] = Player(name=name, house=House(suit=SUITS[i]))
 
     def nextState(self):
         pass

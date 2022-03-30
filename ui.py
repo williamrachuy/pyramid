@@ -76,6 +76,9 @@ class UI():
            r'                              ',
            r'          {}  {}  {}          '.format(table.card_nodes['royals']['spades']['left'].getFace(), table.card_nodes['royals']['spades']['center'].getFace(), table.card_nodes['royals']['spades']['right'].getFace()),
            r'                             ',
+           r'  name: {}',
+           r'  gems: {}',
+           r'  hand: {}',
            #'  ..  ..  ..  ..  ..  ..  ..  '
         ]
         
