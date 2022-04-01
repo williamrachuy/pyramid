@@ -1,7 +1,7 @@
 
 import random, ui
 
-from matplotlib.pyplot import table
+# from matplotlib.pyplot import table
 
 SUITS = ('spades', 'hearts', 'clubs', 'diamonds')
 POSITIONS = ('left', 'right', 'center')
@@ -82,6 +82,28 @@ class Player:
         self.score = score
         self.actions = actions
 
+    def getName(self):
+        return self.name
+
+    def setName(self, name):
+        self.name = name
+
+    def getGems(self):
+        if self.house != None:
+            return self.house.getGems()
+
+    def getHand(self):
+        if self.house != None:
+            return self.house.getHand()
+
+    def getSuit(self):
+        if self.house != None:
+            return self.house.getSuit()
+
+    def getHouse(self):
+        return self.house
+
+
     def claimGem(self, gem_node):
         pass
 
@@ -91,8 +113,13 @@ class Player:
     def pivot(self):
         pass
 
-    def draw(self):
-        pass
+    def draw(self, deck):
+        if self.house != None:
+            cards = deck.draw()
+            if cards != None:
+                self.house.hand.extend(cards)
+        # print("{} of house {} draws {} and puts it into their hand {}".format(self.name, self.house, cards, self.house.hand))
+        # input()
 
     def endTurn(self):
         pass
@@ -161,8 +188,11 @@ class Deck:
     
     def draw(self, index=0, count=1):
         cards = []
-        [cards.append(self.cards.pop(index)) for i in range(count)]
-        return cards
+        if len(self.cards) >= count:
+            [cards.append(self.cards.pop(index)) for i in range(count)]
+            return cards
+        else:
+            return None
 
     def shuffle(self):
         random.shuffle(self.cards)
@@ -175,18 +205,15 @@ class Deck:
         for card in self.cards:
             card.hide()
 
+    def getSize(self):
+        return len(self.cards)
+
 
 
 class Table:
     def __init__(self):
         self.deck = Deck(generateCards(card_type=['subjects'], suit_type=SUITS), hidden=False)
         self.deck.shuffle()
-        self.houses = {
-            'north' : House(suit='spades'),
-            'east'  : House(suit='hearts'),
-            'south' : House(suit='clubs'),
-            'west'  : House(suit='diamonds')
-        }
 
         self.card_nodes = {}
         self.setUpCardNodes()
@@ -273,16 +300,27 @@ class Table:
     def dealSubjects(self):
         for suit in SUITS:
             for position in POSITIONS:
+                # print(self.deck.draw())
                 self.card_nodes['subjects'][suit][position].setCard(self.deck.draw()[0])
+
+    def getDeck(self):
+        return self.deck
 
 
 class House:
-    def __init__(self, suit=None, hand=[], gems=0):
+    def __init__(self, suit=None, hand=None, gems=0):
         self.suit = suit
-        self.hand = hand
+        self.hand = list()
         self.gems = gems
-        
+    
+    def getGems(self):
+        return self.gems
 
+    def getHand(self):
+        return self.hand
+
+    def getSuit(self):
+        return self.suit
 
 ########################################################################################
 
@@ -341,7 +379,8 @@ class Game:
         self.players = {}
         for i in range(4):
             name = 'player{}'.format(i+1)
-            self.players[name] = Player(name=name, house=House(suit=SUITS[i]))
+            house = House(suit=SUITS[i])
+            self.players[name] = Player(name=name, house=house)
 
     def nextState(self):
         pass
@@ -372,6 +411,13 @@ class Game:
                 gem_node.setGem()
                 # print("gem set for peak", suit_pair)
                 empty = False
+    
+    
+    def getTable(self):
+        return self.table
+
+    def getPlayers(self):
+        return self.players
 
 
 

@@ -5,6 +5,9 @@ from ui import UI
 # test
 
 if __name__ == '__main__':
+    '''
+    main should just be Game() and UI()
+    '''
     clear = lambda: os.system('cls')
     clear()
 
@@ -21,7 +24,9 @@ if __name__ == '__main__':
     while not quit:
         # time.sleep(2)
         clear()
-        ui.printTable(table=game.table)
+        ui.printTable(table=game.getTable())
+        ui.printDeckSize(deck=game.table.getDeck())
+        ui.printPlayers(players=game.getPlayers())
         user_input = input("user> ").lower()
         if user_input in ('quit', 'exit', 'q'):
             quit = True
@@ -32,4 +37,8 @@ if __name__ == '__main__':
             pos_current = pos_next
             # print("attempting to pivot", dict_key_name)
             game.table.pivot_nodes['royals']['spades'][dict_key_name].pivot()
-
+        elif user_input in ('draw', 'd'):
+            game.players['player1'].draw(game.table.getDeck())
+            game.players['player2'].draw(game.table.getDeck())
+            game.players['player3'].draw(game.table.getDeck())
+            game.players['player4'].draw(game.table.getDeck())

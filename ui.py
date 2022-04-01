@@ -75,12 +75,26 @@ class UI():
            r'      {}  {}  {}  {}  {}      '.format(self.convert(test=table.gem_nodes['base']['diamonds-spades'].hasGem(), char_true=gem, char_false=empty), table.card_nodes['subjects']['spades']['left'].getFace(), self.convert(test=table.gem_nodes['court']['spades'].hasGem(), char_true=gem, char_false=empty), table.card_nodes['subjects']['spades']['right'].getFace(), self.convert(test=table.gem_nodes['base']['spades-hearts'].hasGem(), char_true=gem, char_false=empty)),
            r'                              ',
            r'          {}  {}  {}          '.format(table.card_nodes['royals']['spades']['left'].getFace(), table.card_nodes['royals']['spades']['center'].getFace(), table.card_nodes['royals']['spades']['right'].getFace()),
-           r'                             ',
-           r'  name: {}',
-           r'  gems: {}',
-           r'  hand: {}',
+           r'                              ',
            #'  ..  ..  ..  ..  ..  ..  ..  '
         ]
         
         for row in table_chars:
             print(row)
+
+    def printPlayers(self, players):
+        for key, player in players.items():
+            rows = [
+                r'  name: {}'.format(player.getName()),
+                r'  suit: {}'.format(player.getSuit()),
+                r'  gems: {}'.format(player.getGems()),
+                r'  hand: {}'.format([card.getFace() for card in player.getHand()]),
+                # r'  hand: house:{} -> hand:{} -> cards:{}'.format(player.getHouse(), player.getHand(), [card.getFace() for card in player.getHand()]),
+            ]
+            for row in rows:
+                print(row)
+            print()
+
+    def printDeckSize(self, deck):
+        print("  deck size: {}".format(deck.getSize()))
+        print()
