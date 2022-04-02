@@ -92,6 +92,9 @@ class Player:
         if self.house != None:
             return self.house.getGems()
 
+    def getActions(self):
+        return self.actions
+
     def getHand(self):
         if self.house != None:
             return self.house.getHand()
@@ -103,20 +106,27 @@ class Player:
     def getHouse(self):
         return self.house
 
-
     def claimGem(self, gem_node):
-        pass
+        if gem_node.hasGem() and self.house != None:
+            self.house.gems += 1
+            gem_node.removeGem()
+            return True
+        return False
 
-    def payGem(self):
-        pass
+    def buyAction(self):
+        if self.getGems() > 0 and self.house != None:
+            self.house.gems -= 1
+            self.actions += 1
+            return True
+        return False
 
-    def pivot(self):
-        pass
+    def pivot(self, pivot_node):
+        pivot_node.pivot()
 
     def draw(self, deck):
         if self.house != None:
             cards = deck.draw()
-            if cards != None:
+            if type(cards) == type(list()) and len(cards) > 0:
                 self.house.hand.extend(cards)
         # print("{} of house {} draws {} and puts it into their hand {}".format(self.name, self.house, cards, self.house.hand))
         # input()
@@ -234,6 +244,8 @@ class Table:
                 self.card_nodes[card_type][suit] = {}
                 for position in POSITIONS:
                     self.card_nodes[card_type][suit][position] = CardNode(card_type=card_type)
+        self.card_nodes['hands'] = {}
+        self.card_nodes['hands'] = CardNode(card_type='hands')
 
     def setUpGemNodes(self):
         for location in LOCATIONS:
@@ -289,7 +301,7 @@ class Table:
             subjects_next = self.card_nodes['subjects'][suit_next]
             # peak
             self.pivot_nodes['peak'][dict_key_name] = PivotNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
-
+        self.pivot_nodes['hands'] = {} # do this in the other for loops and connect to card nodes
     
     def dealRoyals(self):
         for suit in SUITS:
