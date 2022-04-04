@@ -245,7 +245,8 @@ class Table:
                 for position in POSITIONS:
                     self.card_nodes[card_type][suit][position] = CardNode(card_type=card_type)
         self.card_nodes['hands'] = {}
-        self.card_nodes['hands'] = CardNode(card_type='hands')
+        for suit in SUITS:
+            self.card_nodes['hands'][suit] = CardNode(card_type='hands')
 
     def setUpGemNodes(self):
         for location in LOCATIONS:
@@ -273,6 +274,7 @@ class Table:
         for location in LOCATIONS:
             self.pivot_nodes[location] = {}
         self.pivot_nodes['royals'] = {}
+        self.pivot_nodes['hands'] = {}
         for suit in SUITS:
             suit_next = SUITS[(SUITS.index(suit)+1) % len(SUITS)]
             dict_key_name = '{}-{}'.format(suit, suit_next)
@@ -294,6 +296,11 @@ class Table:
                 position_next = POSITIONS[(POSITIONS.index(position)+1) % len(POSITIONS)]
                 dict_key_name = '{}-{}'.format(position, position_next)
                 self.pivot_nodes['royals'][suit][dict_key_name] = PivotNode(card_node_left=royals[position], card_node_right=royals[position_next])
+            self.pivot_nodes['hands'][suit] = {}
+            hands = self.card_nodes['hands'][suit]
+            for position in POSITIONS:
+                dict_key_name = '{}-{}'.format(position, 'hand')
+                self.pivot_nodes['hands'][suit][dict_key_name] = PivotNode(card_node_left=subjects[position], card_node_right=hands)
         for suit in SUITS[0:2]:
             suit_next = SUITS[(SUITS.index(suit)+2) % len(SUITS)]
             dict_key_name = '{}-{}'.format(suit, suit_next)
@@ -301,7 +308,6 @@ class Table:
             subjects_next = self.card_nodes['subjects'][suit_next]
             # peak
             self.pivot_nodes['peak'][dict_key_name] = PivotNode(card_node_left=subjects['center'], card_node_right=subjects_next['center'])
-        self.pivot_nodes['hands'] = {} # do this in the other for loops and connect to card nodes
     
     def dealRoyals(self):
         for suit in SUITS:
