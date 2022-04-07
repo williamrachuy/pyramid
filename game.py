@@ -6,6 +6,10 @@ import random, ui
 SUITS = ('spades', 'hearts', 'clubs', 'diamonds')
 POSITIONS = ('left', 'right', 'center')
 LOCATIONS = ('base', 'cap', 'court', 'peak')
+PLAYER_INPUT = {
+    'pass': ('pass', 'end', 'end turn', 'finish'),
+    'claim_gem': ('claim', 'gem', 'harvest'),
+}
 
 def generateCards(card_type=['subjects', 'royals', 'jokers'], suit_type=['spades', 'hearts', 'clubs', 'diamonds']):
 
@@ -399,6 +403,24 @@ class Game:
             name = 'player{}'.format(i+1)
             house = House(suit=SUITS[i])
             self.players[name] = Player(name=name, house=house)
+
+    def incrementTurnNumber(self):
+        self.turn_number += 1
+        return self.turn_number
+
+    def getTurnNumber(self):
+        return self.turn_number
+
+    def getCurrentPlayer(self):
+        pass
+
+    def playerAction(self, player):
+        player_input = input("player{}> ".format()).lower()
+        if player_input in PLAYER_INPUT['pass']:
+            
+        else:
+            return False
+        return True
 
     def nextState(self):
         pass
