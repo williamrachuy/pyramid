@@ -414,13 +414,16 @@ class Game:
     def getCurrentPlayer(self):
         pass
 
-    def playerAction(self, player):
-        player_input = input("player{}> ".format()).lower()
-        if player_input in PLAYER_INPUT['pass']:
-            
+    def getAction(self, player_input):
+        _input = player_input.lower()
+        if _input in PLAYER_INPUT['pass']:
+            pass
         else:
             return False
         return True
+
+    def playerTakeAction(self, action):
+        pass
 
     def nextState(self):
         pass
