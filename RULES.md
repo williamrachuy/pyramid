@@ -52,12 +52,14 @@ Every action costs one gem. Each turn begins with **one free action**.
 
 - When a lane becomes paired, a gem forms on it. A lane forms at most one gem per turn, so a pair can't be farmed by breaking and re-making it.
 - A gem is collected automatically, at once, by whoever controls its lane. A gem on a stalemated lane waits until someone controls it, for example after a royal swap.
-- A court whose three subjects are all its own suit (a flush) earns its owner a gem when the flush forms.
+- A court whose three subjects are all its own suit (a flush) forms a gem at the court's centre, which goes to its owner.
 - Pairs already on the table at the deal don't form gems.
 
 ## The end
 
-When all ten lanes are paired, the pyramid is complete and the game ends immediately. **Most gems wins**; ties are shared. A round clock (20, 30 or none) ends the game the same way if it runs out first.
+When all ten lanes are paired, the pyramid is complete and the game ends immediately. Whoever made that final pair takes **the capstone: +5 gems**. Then **most gems wins**; ties are shared. A round clock (20, 30 or none) ends the game the same way if it runs out first, with no capstone.
+
+The capstone exists to make closing worth racing for. Without it, ending the game only ever helps the leader, so players behind keep breaking pairs. In AI self-play (30 games per setting, Normal), no competitive game closed the pyramid without a capstone. With +5, about half of games closed, in about 14 rounds on average. +8 did no better than +5.
 
 ## Interpretations (for the author to confirm)
 
@@ -67,4 +69,5 @@ When all ten lanes are paired, the pyramid is complete and the game ends immedia
 4. **The centre has six lanes**: ridges to both neighbours and a peak to the opposite court, as in the prototype.
 5. **Hand cards are played by replacement** and the replaced card goes to the bottom of the deck, so the deck never runs out of meaning.
 6. **One gem per lane per turn**, to stop pair-break-pair loops.
-7. **A round clock** exists because simulated games between competitive players rarely close the pyramid: the player behind keeps breaking pairs. In AI-only simulations, competitive games essentially never closed, and fully cooperative ones closed in about 23 rounds. This may be worth a design look: a bonus for closing, or something that makes breaking a pair costlier.
+7. **A round clock** stays as a backstop for games that never close.
+8. **The capstone (+5)** was the author's chosen fix for games that never closed (see The end).

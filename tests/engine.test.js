@@ -168,7 +168,11 @@ test('all ten lanes paired ends the game; most gems wins', function () {
   var g = E.geometry(r.state);
   assert(g.complete && g.apexUnified && g.baseClosed);
   assert.strictEqual(g.faces.W.C, 5, 'ace at the apex takes the common value');
-  assert.deepStrictEqual(r.state.winners, ['N']);
+  // S closed it: the capstone (+5) lifts S past N.
+  assert(r.events.some(function (e) { return e.type === 'capstone' && e.seat === 'S' && e.gems === 5; }));
+  assert.deepStrictEqual(r.state.winners, ['S']);
+  var r0 = E.apply(Object.assign(E.clone(s), { rules: Object.assign({}, s.rules, { capstone: 0 }) }), { type: 'play', hand: 0, pos: 'L' });
+  assert.deepStrictEqual(r0.state.winners, ['N'], 'without the capstone N wins');
 });
 
 test('two aces paired make 1', function () {
