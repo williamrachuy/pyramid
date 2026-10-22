@@ -24,6 +24,8 @@ Neighbouring faces share a ground ray. When the cards for that shared corner mat
 
 The six ridge and peak lanes are every pair of centre cards, so all six pair exactly when the four apexes agree.
 
+The **peaks are pivots only**: you can swap across them, but they make no gems of their own. The centre has one gem node instead, **the apex** (see Gems).
+
 A lane is **paired** when its two subjects match in rank. Suit doesn't matter. **Aces are wild:** an ace pairs with anything. As a vertex, an ace takes the value of the card it is paired with; two aces paired make **1**. An unpaired ace is 1.
 
 ## Control
@@ -50,7 +52,8 @@ Every action costs one gem. Each turn begins with **one free action**.
 
 ## Gems
 
-- When a lane becomes paired, a gem forms on it. A lane forms at most one gem per turn, so a pair can't be farmed by breaking and re-making it.
+- When a base corner or a ridge becomes paired, a gem forms on it. A lane forms at most one gem per turn, so a pair can't be farmed by breaking and re-making it.
+- **The apex** forms one gem when all four centre cards match (aces wild). Whoever's centre royal trumps all three other centre royals collects it. With the standard deal nobody does (four Kings), so the gem waits until someone moves a royal into the centre that beats the rest.
 - A gem is collected automatically, at once, by whoever controls its lane. A gem on a stalemated lane waits until someone controls it, for example after a royal swap.
 - A court whose three subjects are all its own suit (a flush) forms a gem at the court's centre, which goes to its owner.
 - Pairs already on the table at the deal don't form gems.
@@ -66,7 +69,7 @@ The capstone exists to make closing worth racing for. Without it, ending the gam
 1. **The free gem is a free action, not banked score.** "Every turn a player gets a free gem, meaning a free action": if it were banked, passing every turn would be the safest way to win, since gems are the score. The engine has a switch (`freeGemBanks`) to bank it instead.
 2. **Your own lane needs control; someone else's lane needs a toll.** On a lane you're part of but don't control, you can't swap. On a lane you aren't part of, you pay the controller one gem (this is the action's cost, not an extra). Stalemated lanes are frozen for everyone.
 3. **Royal swaps are allowed** (as in the Python prototype). Without them control is fixed for the whole game, and a gem waiting on a stalemated lane could never be collected "later in the turn".
-4. **The centre has six lanes**: ridges to both neighbours and a peak to the opposite court, as in the prototype.
+4. **The centre has six lanes**: ridges to both neighbours and a peak to the opposite court, as in the prototype. Per the author, the peaks are pivots only and the centre's gem is the single apex node. The apex's controller (the centre royal that beats all three others) is an interpretation.
 5. **Hand cards are played by replacement** and the replaced card goes to the bottom of the deck, so the deck never runs out of meaning.
 6. **One gem per lane per turn**, to stop pair-break-pair loops.
 7. **A round clock** stays as a backstop for games that never close.

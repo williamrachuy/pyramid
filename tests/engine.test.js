@@ -20,6 +20,7 @@ function board(subjects) {
   });
   E.LANES.forEach(function (l) { s.lanes[l.id] = { paired: false, gem: false, spawnTurn: 0 }; });
   E.SEATS.forEach(function (seat) { s.flush[seat] = { on: false, spawnTurn: 0 }; });
+  s.apex = { on: false, gem: false, spawnTurn: 0 };
   return s;
 }
 
@@ -119,7 +120,7 @@ test('making a pair spawns a gem; the controller collects it at once', function 
   assert(r.events.some(function (e) { return e.type === 'collect' && e.seat === 'S'; }));
 });
 
-test('stalemated gem sits until control changes, then is collected', function () {
+test('peaks pivot but make no gems', function () {
   var s = board({
     S: [c('2', 'hearts'), c('3', 'hearts'), c('9', 'clubs')],
     E: [c('5', 'clubs'), c('4', 'diamonds'), c('6', 'diamonds')],
@@ -127,15 +128,30 @@ test('stalemated gem sits until control changes, then is collected', function ()
     W: [c('3', 'clubs'), c('6', 'spades'), c('4', 'spades')]
   });
   s.courts.S.subjects.L = c('8', 'spades');
-  var r = E.apply(s, { type: 'court', a: 'L', b: 'C' }); // S.C = 8 pairs N.C = 8 at the peak
+  var r = E.apply(s, { type: 'court', a: 'L', b: 'C' }); // S.C = 8 pairs N.C = 8 across the peak
   assert(r.state.lanes.pSN.paired);
-  assert.strictEqual(r.state.lanes.pSN.gem, true, 'stalemate: gem stays');
-  // Next: S moves its Jack to the centre; J beats K, S controls the peak.
+  assert.strictEqual(r.state.lanes.pSN.gem, false);
+  assert(!r.events.some(function (e) { return e.type === 'spawn'; }));
+});
+
+test('the apex forms one gem when all four centres match; it waits for a controller', function () {
+  var s = board({
+    S: [c('8', 'spades'), c('3', 'hearts'), c('9', 'clubs')],
+    E: [c('5', 'clubs'), c('8', 'clubs'), c('6', 'diamonds')],
+    N: [c('7', 'hearts'), c('8', 'diamonds'), c('2', 'spades')],
+    W: [c('3', 'clubs'), c('A', 'spades'), c('4', 'spades')]
+  });
+  E.LANES.forEach(function (l) { s.lanes[l.id].paired = E.isPair(s.courts[l.a.seat].subjects[l.a.pos], s.courts[l.b.seat].subjects[l.b.pos]); });
+  var r = E.apply(s, { type: 'court', a: 'L', b: 'C' }); // S.C = 8: all four centres match (the ace is wild)
+  assert(E.apexMatched(r.state));
+  assert(r.events.some(function (e) { return e.type === 'spawn' && e.lane === 'apex'; }));
+  assert.strictEqual(E.apexController(r.state), null, 'four Kings: nobody beats all three');
+  assert.strictEqual(r.state.apex.gem, true, 'the apex gem waits');
   var s2 = r.state; s2.players.S.gems = 1;
-  var r2 = E.apply(s2, { type: 'royal', a: 'L', b: 'C' });
-  assert.strictEqual(E.controller(r2.state, 'pSN'), 'S');
-  assert.strictEqual(r2.state.lanes.pSN.gem, false);
-  assert(r2.events.some(function (e) { return e.type === 'collect' && e.lane === 'pSN' && e.seat === 'S'; }));
+  var r2 = E.apply(s2, { type: 'royal', a: 'L', b: 'C' }); // S's Jack to the centre beats every King
+  assert.strictEqual(E.apexController(r2.state), 'S');
+  assert.strictEqual(r2.state.apex.gem, false);
+  assert(r2.events.some(function (e) { return e.type === 'collect' && e.lane === 'apex' && e.seat === 'S'; }));
 });
 
 test('flush pays the court owner', function () {
