@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070a12">
+<title>Pyramid · Adividiardi</title>
+<meta name="description" content="Pyramid: four courts, ten lanes, and a pyramid to close. A card game of royals, gems and geometry against three AI houses.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+
+<header class="topbar">
+  <a href="/" class="back">&larr; home</a>
+  <div class="topbar-mid" id="topbar-mid"></div>
+  <div class="topbar-right">
+    <button class="icon-btn glass" id="btn-rules" aria-label="How to play" title="How to play (?)">?</button>
+    <button class="icon-btn glass" id="btn-sound" aria-label="Toggle sound" title="Sound (M)">&#9834;</button>
+    <button class="icon-btn glass" id="btn-menu" aria-label="Menu" title="Menu (Esc)">&#9776;</button>
+  </div>
+</header>
+
+<!-- ============ TITLE ============ -->
+<section class="screen" id="screen-title">
+  <div class="title-viz glass-well"><canvas id="title-canvas" aria-hidden="true"></canvas></div>
+  <h1 class="wordmark">PYRAMID</h1>
+  <p class="tagline">Four courts. Ten lanes. Pair them all and the pyramid closes.</p>
+  <div class="setup glass">
+    <div class="setup-row">
+      <span class="setup-label">Opponents</span>
+      <div class="seg" id="seg-level" role="radiogroup" aria-label="Difficulty"></div>
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Clock</span>
+      <div class="seg" id="seg-clock" role="radiogroup" aria-label="Round limit"></div>
+    </div>
+    <div class="setup-row">
+      <span class="setup-label">Pace</span>
+      <div class="seg" id="seg-pace" role="radiogroup" aria-label="AI pace"></div>
+    </div>
+    <div class="houses-preview" id="houses-preview"></div>
+    <div class="setup-actions">
+      <button class="btn btn-gold" id="btn-begin">Take your seat</button>
+      <button class="btn btn-quiet" id="btn-rules-title">How to play</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GAME ============ -->
+<section class="screen" id="screen-game" hidden>
+  <div class="layout">
+    <div class="stage-wrap" id="stage-wrap">
+      <div class="stage" id="stage">
+        <div class="table glass" id="table">
+          <svg class="net" id="net" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="sweep" id="sweep" aria-hidden="true"></div>
+        </div>
+        <div class="tray glass" id="tray"></div>
+        <div class="layer" id="layer"></div>
+        <div class="tip glass" id="tip" role="tooltip" hidden></div>
+      </div>
+    </div>
+    <aside class="rail">
+      <div class="panel glass pyr-panel">
+        <div class="panel-head">
+          <span class="panel-title">The Pyramid</span>
+          <span class="pyr-count" id="pyr-count">0 / 10</span>
+        </div>
+        <div class="pyr-canvas-wrap"><canvas id="pyr-canvas" aria-label="The live pyramid"></canvas></div>
+        <div class="pyr-bar"><i id="pyr-bar-fill"></i></div>
+        <div class="pyr-foot">
+          <span class="pyr-note" id="pyr-note">An unfolded net.</span>
+          <button class="chip" id="btn-view" title="Switch between 3D and the plan view">Plan</button>
+        </div>
+      </div>
+      <div class="panel glass hint-panel">
+        <div class="hint" id="hint"></div>
+      </div>
+      <div class="panel glass log-panel">
+        <div class="panel-head"><span class="panel-title">Table talk</span></div>
+        <ol class="log" id="log" aria-live="polite"></ol>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ RESULTS ============ -->
+<div class="overlay" id="results" hidden role="dialog" aria-modal="true" aria-labelledby="results-title">
+  <div class="sheet glass">
+    <div class="results-viz glass-well"><canvas id="results-canvas" aria-hidden="true"></canvas></div>
+    <h2 id="results-title" class="sheet-title">The Pyramid Closes</h2>
+    <p class="sheet-sub" id="results-sub"></p>
+    <div class="standings" id="standings"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-quiet" id="btn-results-table">Look at the table</button>
+      <button class="btn btn-gold" id="btn-again">Deal again</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ RULES ============ -->
+<div class="overlay" id="rules" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
+  <div class="sheet glass sheet-wide">
+    <button class="icon-btn glass sheet-close" data-close aria-label="Close">&times;</button>
+    <h2 id="rules-title" class="sheet-title">How to Play</h2>
+    <div class="rules">
+      <section>
+        <h3>The table is a pyramid, unfolded</h3>
+        <p>Four players hold four courts: <b class="s-S">South &spades;</b> (you), <b class="s-E">East &hearts;</b>, <b class="s-N">North &clubs;</b> and <b class="s-W">West &diams;</b>. Each court is one triangular face of a pyramid. Its three <b>subjects</b> (Ace to 10) are the face's three corners: left and right on the ground, centre at the top. Its three <b>royals</b> (Jack, Queen, King) sit beneath them and rule them.</p>
+        <p>Neighbouring faces share a corner on the ground; all four share the top. When the cards at a shared corner match, those two corners meet. When every shared corner meets, the faces close into a pyramid.</p>
+      </section>
+      <section>
+        <h3>Lanes</h3>
+        <p>A <b>lane</b> is a pivot between two courts. There are ten:</p>
+        <ul>
+          <li><b>Four base corners</b>: your right subject and East's left subject, and so on round the table.</li>
+          <li><b>Four ridges</b>: your centre subject and each neighbour's centre subject.</li>
+          <li><b>Two peaks</b>: your centre and North's centre, and East's centre and West's.</li>
+        </ul>
+        <p>A lane is <b>paired</b> when its two subjects match in rank. Suits don't matter. Aces are wild: an ace pairs with anything, and two aces make one.</p>
+      </section>
+      <section>
+        <h3>Control</h3>
+        <p>Each lane is ruled by the royals under its two subjects (left under left, centre under centre, right under right). Whoever's royal trumps controls the lane.</p>
+        <ul>
+          <li>Ranks: <b>King beats Queen, Queen beats Jack, Jack beats King.</b></li>
+          <li>Equal ranks go to the suit: <b>&spades; beats &hearts;, &hearts; beats &clubs;, &clubs; beats &diams;, &diams; beats &spades;.</b></li>
+          <li>Same rank and same colour is a <b>stalemate</b>: nobody controls that lane.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Your turn</h3>
+        <p>Every action costs one gem. Each turn begins with <b>one free action</b>.</p>
+        <ul>
+          <li><b>Swap two of your subjects</b> (click one, then another). No lane needed.</li>
+          <li><b>Swap two of your royals</b> to change who controls your lanes.</li>
+          <li><b>Swap across a lane you control</b> (click the lane).</li>
+          <li><b>Swap across someone else's lane</b> by paying its controller: your gem goes to them.</li>
+          <li><b>Draw</b> a card (hand of up to 3), then <b>play</b> it onto one of your subjects. The replaced card goes to the bottom of the deck.</li>
+          <li><b>End your turn</b> when you're done.</li>
+        </ul>
+      </section>
+      <section>
+        <h3>Gems</h3>
+        <p>When a lane becomes paired, a gem forms on it (at most once per lane per turn). Whoever controls that lane collects it automatically, at once. A gem on a stalemated lane waits there until someone controls it. A court that holds three of its own suit (a flush) earns its owner a gem.</p>
+      </section>
+      <section>
+        <h3>The end</h3>
+        <p>When all ten lanes are paired the pyramid is complete and the game ends. Most gems wins. If the round clock runs out first, the game ends there.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MENU ============ -->
+<div class="overlay" id="menu" hidden role="dialog" aria-modal="true" aria-labelledby="menu-title">
+  <div class="sheet glass sheet-narrow">
+    <button class="icon-btn glass sheet-close" data-close aria-label="Close">&times;</button>
+    <h2 id="menu-title" class="sheet-title">Menu</h2>
+    <div class="menu-list">
+      <button class="btn btn-quiet" data-close>Resume</button>
+      <button class="btn btn-quiet" id="btn-menu-rules">How to play</button>
+      <label class="toggle-row"><span>Sound</span><input type="checkbox" id="opt-sound"></label>
+      <label class="toggle-row"><span>Glass effects</span><input type="checkbox" id="opt-fx"></label>
+      <button class="btn btn-quiet" id="btn-new">New game</button>
+      <a class="btn btn-quiet" href="/">Leave the table</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="engine.js?v=2"></script>
+<script src="ai.js?v=2"></script>
+<script src="viz.js?v=2"></script>
+<script src="audio.js?v=2"></script>
+<script src="ui.js?v=2"></script>
+</body>
+</html>
