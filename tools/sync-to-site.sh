@@ -7,5 +7,6 @@ site="${1:-$here/../williamrachuy.github.io}"
 dest="$site/pyramid"
 [[ -d "$site/.git" ]] || { echo "Not a site checkout: $site" >&2; exit 1; }
 mkdir -p "$dest"
-rsync -a --delete --exclude '.DS_Store' "$here/web/" "$dest/"
+find "$dest" -mindepth 1 -delete
+cp -R "$here/web/." "$dest/"
 echo "Synced $here/web -> $dest ($(git -C "$here" rev-parse --short HEAD))"
