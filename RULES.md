@@ -44,7 +44,7 @@ Every action costs one gem. Each turn begins with **one free action**.
 
 - **Swap two of your own subjects.** No lane needed.
 - **Swap two of your own royals.** This changes who controls your lanes.
-- **Swap across a lane you control.** The subjects at its two ends trade places. (In the game, click one card and then its partner, or click the lane's gem node.)
+- **Swap across a lane you control.** The subjects at its two ends trade places. (In the game: tap one card, then its partner across the lane. All play is done with the cards.)
 - **Swap across a lane you are not part of** by paying its controller: the action's gem goes to them. A stalemated lane can't be swapped by anyone.
 - **Draw** a card into your hand (hand limit 3).
 - **Play** a card from your hand onto one of your subjects. The replaced subject goes to the bottom of the deck.
