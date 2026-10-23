@@ -44,7 +44,7 @@ Every action costs one gem. Each turn begins with **one free action**.
 
 - **Swap two of your own subjects.** No lane needed.
 - **Swap two of your own royals.** This changes who controls your lanes.
-- **Swap across a lane you control.** The subjects at its two ends trade places.
+- **Swap across a lane you control.** The subjects at its two ends trade places. (In the game, click one card and then its partner, or click the lane's gem node.)
 - **Swap across a lane you are not part of** by paying its controller: the action's gem goes to them. A stalemated lane can't be swapped by anyone.
 - **Draw** a card into your hand (hand limit 3).
 - **Play** a card from your hand onto one of your subjects. The replaced subject goes to the bottom of the deck.
@@ -52,11 +52,13 @@ Every action costs one gem. Each turn begins with **one free action**.
 
 ## Gems
 
-- When a base corner or a ridge becomes paired, a gem forms on it. A lane forms at most one gem per turn, so a pair can't be farmed by breaking and re-making it.
-- **The apex** forms one gem when all four centre cards match (aces wild). Whoever's centre royal trumps all three other centre royals collects it. With the standard deal nobody does (four Kings), so the gem waits until someone moves a royal into the centre that beats the rest.
-- A gem is collected automatically, at once, by whoever controls its lane. A gem on a stalemated lane waits until someone controls it, for example after a royal swap.
-- A court whose three subjects are all its own suit (a flush) forms a gem at the court's centre, which goes to its owner.
-- Pairs already on the table at the deal don't form gems.
+Gems never form during a turn. They form in a **generation phase**: once at the start of the game, before South's first turn, and again between every two turns, before the next player acts.
+
+- In each generation phase, every paired base corner and every paired ridge forms a gem. A node holds at most one gem.
+- **The apex** forms one gem in a generation phase when all four centre cards match (aces wild). The peaks themselves form none.
+- A court whose three subjects are all its own suit (a flush) forms a gem at the court's gem node for its owner, in each generation phase.
+- A gem is collected automatically, at once, by whoever controls its node. The apex goes to whoever's centre royal trumps all three other centre royals; with the standard deal nobody's does (four Kings).
+- A gem on a stalemated node waits there, and is collected the moment someone controls that node, even mid-turn (for example after a royal swap).
 
 ## The end
 
@@ -71,6 +73,6 @@ The capstone exists to make closing worth racing for. Without it, ending the gam
 3. **Royal swaps are allowed** (as in the Python prototype). Without them control is fixed for the whole game, and a gem waiting on a stalemated lane could never be collected "later in the turn".
 4. **The centre has six lanes**: ridges to both neighbours and a peak to the opposite court, as in the prototype. Per the author, the peaks are pivots only and the centre's gem is the single apex node. The apex's controller (the centre royal that beats all three others) is an interpretation.
 5. **Hand cards are played by replacement** and the replaced card goes to the bottom of the deck, so the deck never runs out of meaning.
-6. **One gem per lane per turn**, to stop pair-break-pair loops.
+6. **Gems form only in the generation phase** (the author's rule), so making and breaking pairs within a turn earns nothing.
 7. **A round clock** stays as a backstop for games that never close.
 8. **The capstone (+5)** was the author's chosen fix for games that never closed (see The end).

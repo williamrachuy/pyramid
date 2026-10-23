@@ -12,15 +12,19 @@ function test(name, fn) {
 
 function c(r, s) { return { r: r, s: s, id: r + s.charAt(0) }; }
 
-// A game with a hand-built board.
+// A started game (the opening generation phase done).
+function opened(opts) { return E.start(E.newGame(opts)).state; }
+
+// A game in play with a hand-built board and no gems anywhere.
 function board(subjects) {
   var s = E.newGame({ seed: 1 });
+  s.phase = 'play';
   E.SEATS.forEach(function (seat) {
     E.POS.forEach(function (p, i) { s.courts[seat].subjects[p] = subjects[seat][i]; });
   });
-  E.LANES.forEach(function (l) { s.lanes[l.id] = { paired: false, gem: false, spawnTurn: 0 }; });
-  E.SEATS.forEach(function (seat) { s.flush[seat] = { on: false, spawnTurn: 0 }; });
-  s.apex = { on: false, gem: false, spawnTurn: 0 };
+  E.LANES.forEach(function (l) { s.lanes[l.id] = { paired: E.isPair(s.courts[l.a.seat].subjects[l.a.pos], s.courts[l.b.seat].subjects[l.b.pos]), gem: false }; });
+  E.SEATS.forEach(function (seat) { s.flush[seat] = { on: E.isFlush(s, seat) }; });
+  s.apex = { on: E.apexMatched(s), gem: false };
   return s;
 }
 
@@ -47,7 +51,7 @@ test('pairs: equal ranks, aces wild', function () {
   assert(!E.isPair(c('6', 'spades'), c('7', 'hearts')));
 });
 
-test('deal: 12 subjects, 28 in the deck, royals J/K/Q, one free action', function () {
+test('deal: 12 subjects, 28 in the deck, royals J/K/Q; the game opens with a generation phase', function () {
   var s = E.newGame({ seed: 'x' });
   assert.strictEqual(s.deck.length, 28);
   E.SEATS.forEach(function (seat) {
@@ -55,8 +59,13 @@ test('deal: 12 subjects, 28 in the deck, royals J/K/Q, one free action', functio
     assert.strictEqual(s.courts[seat].royals.C.r, 'K');
     assert.strictEqual(s.courts[seat].royals.R.r, 'Q');
   });
-  assert.strictEqual(s.free, 1);
-  assert.strictEqual(s.current, 'S');
+  assert.strictEqual(s.phase, 'deal');
+  assert(E.apply(s, { type: 'pass' }).error, 'no play before the opening phase');
+  var r = E.start(s);
+  assert.strictEqual(r.state.phase, 'play');
+  assert.strictEqual(r.events[0].type, 'generate');
+  assert.strictEqual(r.state.free, 1);
+  assert.strictEqual(r.state.current, 'S');
 });
 
 test('opening control: right corner, ridges by suit, peaks stalemated', function () {
@@ -70,25 +79,27 @@ test('opening control: right corner, ridges by suit, peaks stalemated', function
 });
 
 test('own lane: only the controller may swap', function () {
-  var s = E.newGame({ seed: 3 });
+  var s = opened({ seed: 3 });
   assert.strictEqual(E.laneAccess(s, 'cSE', 'S').ok, true);
   assert.strictEqual(E.laneAccess(s, 'cWS', 'S').ok, false); // W controls
   assert.strictEqual(E.laneAccess(s, 'pSN', 'S').ok, false); // stalemate
 });
 
 test('foreign lane: pay the controller', function () {
-  var s = E.newGame({ seed: 4 });
+  var s = opened({ seed: 4 });
+  var eBefore = s.players.E.gems;
   var acc = E.laneAccess(s, 'cEN', 'S');
   assert.strictEqual(acc.ok, true);
   assert.strictEqual(acc.toll, 'E');
   var r = E.apply(s, { type: 'lane', lane: 'cEN' });
   assert(!r.error, r.error);
-  assert.strictEqual(r.state.players.E.gems >= 1, true);
+  assert.strictEqual(r.state.players.E.gems, eBefore + 1);
   assert.strictEqual(r.state.free, 0);
 });
 
 test('court swap is free of control and costs the free action', function () {
-  var s = E.newGame({ seed: 5 });
+  var s = opened({ seed: 5 });
+  s.players.S.gems = 0;
   var L = s.courts.S.subjects.L.id, C = s.courts.S.subjects.C.id;
   var r = E.apply(s, { type: 'court', a: 'L', b: 'C' });
   assert.strictEqual(r.state.courts.S.subjects.L.id, C);
@@ -98,26 +109,23 @@ test('court swap is free of control and costs the free action', function () {
   assert(r2.error, 'second action with no gems should fail');
 });
 
-test('making a pair spawns a gem; the controller collects it at once', function () {
+test('pairs pay in the generation phase, not when they are made', function () {
   var s = board({
-    S: [c('2', 'hearts'), c('3', 'hearts'), c('9', 'clubs')],
+    S: [c('5', 'hearts'), c('3', 'hearts'), c('9', 'clubs')],
     E: [c('5', 'clubs'), c('4', 'diamonds'), c('6', 'diamonds')],
     N: [c('7', 'hearts'), c('8', 'diamonds'), c('2', 'spades')],
     W: [c('3', 'clubs'), c('6', 'spades'), c('4', 'spades')]
   });
-  // S swaps L and R: S.R becomes 2... we want S.R to pair E.L (5): swap S.R with nothing.
-  // Instead S swaps across its own corner cSE (S controls it): S.R=9, E.L=5 -> no pair.
-  // Swap S.L<->S.C to make no pair, then check rSE: S.C=3 vs E.C=4 no.
-  s.courts.S.subjects.R = c('5', 'spades');
-  var before = s.players.S.gems;
-  // Pair cSE by swapping S.L and S.R? Build it directly: S.L=5? Use a court swap.
-  s.courts.S.subjects.L = c('5', 'hearts');
-  s.courts.S.subjects.R = c('9', 'clubs');
   var r = E.apply(s, { type: 'court', a: 'L', b: 'R' }); // S.R = 5 hearts pairs E.L = 5 clubs
   assert(r.state.lanes.cSE.paired);
-  assert.strictEqual(r.state.lanes.cSE.gem, false, 'collected');
-  assert.strictEqual(r.state.players.S.gems, before + 1, 'S controls cSE and collects');
-  assert(r.events.some(function (e) { return e.type === 'collect' && e.seat === 'S'; }));
+  assert(!r.events.some(function (e) { return e.type === 'spawn' || e.type === 'collect'; }), 'no gems during a turn');
+  assert.strictEqual(r.state.players.S.gems, 0);
+  r = E.apply(r.state, { type: 'pass' }); // the phase before East's turn
+  assert(r.events.some(function (e) { return e.type === 'spawn' && e.lane === 'cSE'; }));
+  assert(r.events.some(function (e) { return e.type === 'collect' && e.lane === 'cSE' && e.seat === 'S'; }), 'S controls cSE');
+  assert.strictEqual(r.state.players.S.gems, 1);
+  r = E.apply(r.state, { type: 'pass' }); // and again before North's
+  assert.strictEqual(r.state.players.S.gems, 2, 'a paired node pays every phase');
 });
 
 test('peaks pivot but make no gems', function () {
@@ -130,31 +138,31 @@ test('peaks pivot but make no gems', function () {
   s.courts.S.subjects.L = c('8', 'spades');
   var r = E.apply(s, { type: 'court', a: 'L', b: 'C' }); // S.C = 8 pairs N.C = 8 across the peak
   assert(r.state.lanes.pSN.paired);
-  assert.strictEqual(r.state.lanes.pSN.gem, false);
+  r = E.apply(r.state, { type: 'pass' });
   assert(!r.events.some(function (e) { return e.type === 'spawn'; }));
 });
 
-test('the apex forms one gem when all four centres match; it waits for a controller', function () {
+test('the apex forms one gem when all four centres match; it waits, and never stacks', function () {
   var s = board({
     S: [c('8', 'spades'), c('3', 'hearts'), c('9', 'clubs')],
     E: [c('5', 'clubs'), c('8', 'clubs'), c('6', 'diamonds')],
     N: [c('7', 'hearts'), c('8', 'diamonds'), c('2', 'spades')],
     W: [c('3', 'clubs'), c('A', 'spades'), c('4', 'spades')]
   });
-  E.LANES.forEach(function (l) { s.lanes[l.id].paired = E.isPair(s.courts[l.a.seat].subjects[l.a.pos], s.courts[l.b.seat].subjects[l.b.pos]); });
   var r = E.apply(s, { type: 'court', a: 'L', b: 'C' }); // S.C = 8: all four centres match (the ace is wild)
   assert(E.apexMatched(r.state));
+  r = E.apply(r.state, { type: 'pass' }); // phase before East
   assert(r.events.some(function (e) { return e.type === 'spawn' && e.lane === 'apex'; }));
   assert.strictEqual(E.apexController(r.state), null, 'four Kings: nobody beats all three');
   assert.strictEqual(r.state.apex.gem, true, 'the apex gem waits');
-  var s2 = r.state; s2.players.S.gems = 1;
-  var r2 = E.apply(s2, { type: 'royal', a: 'L', b: 'C' }); // S's Jack to the centre beats every King
-  assert.strictEqual(E.apexController(r2.state), 'S');
-  assert.strictEqual(r2.state.apex.gem, false);
-  assert(r2.events.some(function (e) { return e.type === 'collect' && e.lane === 'apex' && e.seat === 'S'; }));
+  r = E.apply(r.state, { type: 'pass' }); // phase before North: the apex already holds a gem
+  assert(!r.events.some(function (e) { return e.type === 'spawn' && e.lane === 'apex'; }));
+  var r2 = E.apply(r.state, { type: 'royal', a: 'L', b: 'C' }); // North's Jack to the centre beats every King
+  assert.strictEqual(E.apexController(r2.state), 'N');
+  assert(r2.events.some(function (e) { return e.type === 'collect' && e.lane === 'apex' && e.seat === 'N'; }), 'collected at once, mid-turn');
 });
 
-test('flush pays the court owner', function () {
+test('a flush pays its owner in the generation phase', function () {
   var s = board({
     S: [c('2', 'spades'), c('3', 'spades'), c('9', 'clubs')],
     E: [c('5', 'clubs'), c('4', 'diamonds'), c('6', 'diamonds')],
@@ -163,9 +171,11 @@ test('flush pays the court owner', function () {
   });
   s.players.S.hand = [c('9', 'spades')];
   var r = E.apply(s, { type: 'play', hand: 0, pos: 'R' });
+  assert(!r.events.some(function (e) { return e.type === 'flush'; }));
+  assert.strictEqual(r.state.deck[r.state.deck.length - 1].id, '9c', 'displaced card to the bottom of the deck');
+  r = E.apply(r.state, { type: 'pass' });
   assert(r.events.some(function (e) { return e.type === 'flush' && e.seat === 'S'; }));
   assert.strictEqual(r.state.players.S.gems, 1);
-  assert.strictEqual(r.state.deck[r.state.deck.length - 1].id, '9c', 'displaced card to the bottom of the deck');
 });
 
 test('all ten lanes paired ends the game; most gems wins', function () {
@@ -202,23 +212,8 @@ test('two aces paired make 1', function () {
   assert.strictEqual(E.vertexValue(s, 'E', 'L'), 1);
 });
 
-test('one gem per lane per turn: no farming', function () {
-  var s = board({
-    S: [c('5', 'hearts'), c('3', 'hearts'), c('9', 'clubs')],
-    E: [c('5', 'clubs'), c('4', 'diamonds'), c('6', 'diamonds')],
-    N: [c('7', 'hearts'), c('8', 'diamonds'), c('2', 'spades')],
-    W: [c('3', 'clubs'), c('6', 'spades'), c('4', 'spades')]
-  });
-  s.players.S.gems = 10;
-  var r = E.apply(s, { type: 'court', a: 'L', b: 'R' }); // pair
-  var g1 = r.state.players.S.gems;
-  r = E.apply(r.state, { type: 'court', a: 'L', b: 'R' }); // break
-  r = E.apply(r.state, { type: 'court', a: 'L', b: 'R' }); // re-pair: no new gem
-  assert.strictEqual(r.state.players.S.gems, g1 - 2);
-});
-
 test('clock: the game ends after maxRounds', function () {
-  var s = E.newGame({ seed: 9, maxRounds: 2 });
+  var s = opened({ seed: 9, maxRounds: 2 });
   for (var i = 0; i < 8 && s.phase === 'play'; i++) s = E.apply(s, { type: 'pass' }).state;
   assert.strictEqual(s.phase, 'over');
   assert.strictEqual(s.endReason, 'clock');
@@ -227,7 +222,7 @@ test('clock: the game ends after maxRounds', function () {
 test('AI games terminate and keep invariants', function () {
   var ends = { pyramid: 0, clock: 0 }, turns = 0;
   for (var g = 0; g < 16; g++) {
-    var s = E.newGame({ seed: 'ai' + g });
+    var s = opened({ seed: 'ai' + g });
     var rng = E.mulberry32(g + 7);
     var level = ['easy', 'normal', 'hard', 'master'][g % 4];
     var guard = 0, acted = 0, cur = s.current;
